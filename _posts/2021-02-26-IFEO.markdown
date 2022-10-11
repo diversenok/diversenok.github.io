@@ -24,7 +24,7 @@ Looking at filesystem and registry activity while creating a new process reveals
 
 <figure class="shadow">
   <img  alt="Process Monitor's Log" src="/images/IFEO/02.Procmon-log.png"/>
-  <figcaption>Registry operations performed during process creation.</figcaption>
+  <figcaption><i>Figure:</i> Registry operations performed during process creation.</figcaption>
 </figure>
 
 As you can see, some code (located in kernelbase.dll according to the stack traces) checks various registry keys for existence. I highlighted the most promising entry that is supposed to contain a full path to the debugger and, optionally, its parameters. Therefore, here is an example registration:
@@ -38,7 +38,7 @@ Looking at how the process trees compare, we can see where the debugger injects 
 
 <figure>
   <img alt="Process tree" src="/images/IFEO/03.Process-tree.png" />
-  <figcaption>The process hierarchy with and without interception.</figcaption>
+  <figcaption><i>Figure:</i> The process hierarchy with and without interception.</figcaption>
 </figure>
 
 It is worth pointing out the limitations:
@@ -57,7 +57,7 @@ Being a middleware, we a free to decide whether we want to execute the target, a
 
 <figure class="shadow">
   <img alt="Ask Dialog" src="/images/IFEO/04.Ask-dialog.png"/>
-  <figcaption>The confirmation dialog for running a program.</figcaption>
+  <figcaption><i>Figure:</i> The confirmation dialog for running a program.</figcaption>
 </figure>
 
 I am not sure whether this mechanism would make any sense (at least for its original purpose) if it **would not be possible for the debugger to start the target program anyway**. Hence, yes, IFEO does have an exception. I was not entirely correct when I said it does not matter how you launch the application. As we know, Windows API provides several ways to start programs. The most well-known (and the ones we need) are  [`ShellExecuteEx`](https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/nf-shellapi-shellexecuteexw) and [`CreateProcess`](https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createprocessw). There are, in fact, more of them, although each one eventually ends up calling `CreateProcess`. The point is: all *documented* ways to create processes are aware of Image File Execution Options and follow their rules. The exception explicitly made for debuggers is that all programs started via `CreateProcess` with the `DEBUG_PROCESS` flag are not affected. It resolves the issue of entering an infinite loop of debuggers launching themselves but provides an additional argument why nobody should rely on this mechanism as a security measure.
@@ -110,7 +110,7 @@ We first try to use `CreateProcess`, and if it does not work, we ask the User Ac
 
 <figure class="shadow">
   <img  alt="Elevation chain under IFEO" src="/images/IFEO/05.Elevation.png"/>
-  <figcaption>The process hierarchy during elevation.</figcaption>
+  <figcaption><i>Figure:</i> The process hierarchy during elevation.</figcaption>
 </figure>
 
 ## Where Are All My Parameters?
@@ -134,7 +134,7 @@ I highlighted the filename part in bold; the rest contains the arguments. If non
 
 <figure class="shadow">
   <img  alt="Explorer's Warning" src="/images/IFEO/06.Explorer-warning.png"/>
-  <figcaption>Explorer's warning message.</figcaption>
+  <figcaption><i>Figure:</i> Explorer's warning message.</figcaption>
 </figure>
 
 As for our tools, in some cases, we might have no choice but to use `ShellExecuteEx`, which does not include any correction logic and forces us to supply both parts individually. Therefore, we should mimic `CreateProcess`'s behavior and try to guess what other programs want to achieve.
@@ -153,7 +153,7 @@ Here is how it goes: a program calls to `ShellExecuteEx` specifying the target f
 
 <figure>
   <img alt="UAC elevation diagram with IFO" src="/images/IFEO/07.Elevation-detailed.png"/>
-  <figcaption>The detailed view on the elevation process under IFEO.</figcaption>
+  <figcaption><i>Figure:</i> The detailed view on the elevation process under IFEO.</figcaption>
 </figure>
 
 There is also another peculiar topic I want to discuss in this section. Every process stores an identifier of its parent, and some tools use this field to display processes in a tree-like hierarchy. Surprisingly, when it comes to elevation, the caller of `ShellExecuteEx` still appears as a parent, even though **svchost.exe** does all the work on its behalf. How is it possible? Yet, even better, can we achieve the same? When we set up the interception, we instruct the system to inject our debugger into the hierarchy, essentially gaining control over the subtree. It is perfectly normal unless we deal with a multi-process application that depends on correct parent-child relationships. In this case, we should re-parent the new process the same way **AppInfo** does. Luckily for us, this option is documented: all we need is to use [`PROC_THREAD_ATTRIBUTE_PARENT_PROCESS`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute) and [`STARTUPINFOEX`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw). We can use this trick to improve compatibility: the target program would not even know what happened.

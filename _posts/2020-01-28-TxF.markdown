@@ -29,7 +29,7 @@ Let's take a look at the architecture of these new functions. We know, that the 
 
 <figure>
   <img src="/images/TxF/02.API-layers.png" alt="API layers"/>
-  <figcaption>A relation between the documented API and the system calls.</figcaption>
+  <figcaption><i>Figure:</i> A relation between the documented API and the system calls.</figcaption>
 </figure>
 
 The definitions of these Native API functions haven't changed in decades, so there is no extra parameter to specify a transaction. How does the kernel know which one to use then? The answer is simple yet promising: each thread has a designated field, where it stores a handle to the current transaction. This variable resides in a specific region of memory called TEB — Thread Environmental Block. As for other well-known fields located here as well, I can name the [last error code](https://docs.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror) and the [thread ID](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentthreadid).
@@ -70,7 +70,7 @@ Take a look at this screenshot below. You can see three programs completely disa
 
 <figure class="shadow">
   <img src="/images/TxF/03.TxF-isolation.png" alt="Transaction isolation"/>
-  <figcaption>Transaction isolation in action.</figcaption>
+  <figcaption><i>Figure:</i> Transaction isolation in action.</figcaption>
 </figure>
 
 My program is not a sandbox whatsoever; it lacks one crucial piece — a **security boundary**. I know that some companies still manage to sell similar products, presenting them as real sandboxes, shame on them, what can I say. And you might think: How can you ever make it a sandbox, even being a debugger you can't reliably prevent a process from modifying a variable that controls the transaction, it resides in its memory after all. Fair enough, that's why I have to have another marvelous trick in my sleeve, which will eventually help me finish this project and which I won't reveal for now. Yes, I am planning to create a completely user-mode sandbox with file system virtualization. In the meantime, use [Sandboxie](https://github.com/sandboxie-plus/Sandboxie) and keep experimenting with [AppContainers](https://docs.microsoft.com/en-us/windows/win32/secauthz/appcontainer-isolation). Stay tuned.
