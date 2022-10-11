@@ -1,5 +1,5 @@
 .wrapper {
-  max-width: 780px;
+  max-width: 830px;
 }
 
 figure {
@@ -25,7 +25,7 @@ figure.float-right img {
   margin-bottom: 0.6em;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 850px) {
   figure.float-right img  {
     float: none;
     margin: auto;
