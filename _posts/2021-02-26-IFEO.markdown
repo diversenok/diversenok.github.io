@@ -5,7 +5,7 @@ date: 2021-02-26 13:34:56 +0100
 ---
 
 <figure class="shadow">
-  <img alt="Execution Master" src="https://habrastorage.org/webt/tw/cm/do/twcmdoc7fmvepwh_a7v1x3gn4gc.png"/>
+  <img alt="Execution Master" src="/images/IFEO/01.ExecutionMaster.png"/>
 </figure>
 
 Have you ever heard of Image File Execution Options (**IFEO**)? It is a registry key under `HKEY_LOCAL_MACHINE` that controls things like [Global Flags](https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/gflags-overview) and [Mitigation Policies](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy) on a per-process basis. [One of its features](https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/a329t4ed%28v=vs.100%29) that drew my attention is a mechanism designed to help developers debug multi-process applications. Imagine a scenario where some program creates a child process that crashes immediately. In case you cannot launch this child manually (that can happen for various reasons), you might have a hard time troubleshooting this problem. With IFEO, however, you can instruct the system to launch your favorite debugger right when it's about to start this troublesome process. Then you can single-step through the code and figure what goes wrong. Sounds incredibly useful, right?
@@ -23,7 +23,8 @@ Those who want to start experimenting right away can find the GitHub repository 
 Looking at filesystem and registry activity while creating a new process reveals plenty of peculiarities. Besides filename corrections (which we will discuss a bit later), you can find how querying for IFEO settings works. Let us take a look at a portion of [Process Monitor](https://docs.microsoft.com/en-us/sysinternals/downloads/procmon)'s logs captured while I start **cmd.exe**.
 
 <figure class="shadow">
-  <img  alt="Process Monitor's Log" src="https://habrastorage.org/webt/hu/7b/k6/hu7bk6b8kdkwn4zocxjg8-lvhwo.png"/>
+  <img  alt="Process Monitor's Log" src="/images/IFEO/02.Procmon-log.png"/>
+  <figcaption>Registry operations performed during process creation.</figcaption>
 </figure>
 
 As you can see, some code (located in kernelbase.dll according to the stack traces) checks various registry keys for existence. I highlighted the most promising entry that is supposed to contain a full path to the debugger and, optionally, its parameters. Therefore, here is an example registration:
@@ -36,7 +37,8 @@ As you can see, some code (located in kernelbase.dll according to the stack trac
 Looking at how the process trees compare, we can see where the debugger injects itself into the hierarchy:
 
 <figure>
-  <img alt="Process tree" src="https://habrastorage.org/webt/go/ew/lz/goewlzhbnmjzmwu5t8jmncvepm4.png" />
+  <img alt="Process tree" src="/images/IFEO/03.Process-tree.png" />
+  <figcaption>The process hierarchy with and without interception.</figcaption>
 </figure>
 
 It is worth pointing out the limitations:
@@ -54,7 +56,8 @@ Alright, let us take a closer look at the prospects. We can intercept any progra
 Being a middleware, we a free to decide whether we want to execute the target, and if so — how. When I first discovered this mechanism, my initial experiment was to write a tool that asks the user for consent whether they want to proceed. After a few minutes of research and programming, I wrote and registered an ultimately simple app with a *Yes/No* dialog that launches the intercepted executable if the user approves it. The first test spotted how naïve I was. Have you already guessed what happened when I pressed *Yes*? I saw the same dialog again. Repeatedly. Right, I fell into the trap I set up myself. It is going to be a long way.
 
 <figure class="shadow">
-  <img alt="Ask Dialog" src="https://habrastorage.org/webt/fx/ad/ar/fxadarpinlqv4hi-joukwquelg8.png"/>
+  <img alt="Ask Dialog" src="/images/IFEO/04.Ask-dialog.png"/>
+  <figcaption>The confirmation dialog for running a program.</figcaption>
 </figure>
 
 I am not sure whether this mechanism would make any sense (at least for its original purpose) if it **would not be possible for the debugger to start the target program anyway**. Hence, yes, IFEO does have an exception. I was not entirely correct when I said it does not matter how you launch the application. As we know, Windows API provides several ways to start programs. The most well-known (and the ones we need) are  [`ShellExecuteEx`](https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/nf-shellapi-shellexecuteexw) and [`CreateProcess`](https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-createprocessw). There are, in fact, more of them, although each one eventually ends up calling `CreateProcess`. The point is: all *documented* ways to create processes are aware of Image File Execution Options and follow their rules. The exception explicitly made for debuggers is that all programs started via `CreateProcess` with the `DEBUG_PROCESS` flag are not affected. It resolves the issue of entering an infinite loop of debuggers launching themselves but provides an additional argument why nobody should rely on this mechanism as a security measure.
@@ -106,7 +109,8 @@ if (!CreateProcess(…))
 We first try to use `CreateProcess`, and if it does not work, we ask the User Account Control (and, therefore, the interactive user) for help and elevation. So, after getting `ERROR_ELEVATION_REQUIRED`, we are left with no choice but to use `ShellExecuteEx`, which... always launches our debugger and not the target! Fortunately, the second instance will have administrative rights and would not have trouble breaking through IFEO using `CreateProcess`. We just fell into our trap, cloned ourselves, and recovered. Thus, we need to include additional logic to suppress duplicate interaction with the user because we do not want to ask them the same questions twice. How could you ever think of anything like that in advance?!
 
 <figure class="shadow">
-  <img  alt="Elevation chain under IFEO" src="https://habrastorage.org/webt/or/ap/d-/orapd-odzaij06bh7e_nhiw6nw8.png"/>
+  <img  alt="Elevation chain under IFEO" src="/images/IFEO/05.Elevation.png"/>
+  <figcaption>The process hierarchy during elevation.</figcaption>
 </figure>
 
 ## Where Are All My Parameters?
@@ -129,7 +133,8 @@ When someone attempts to start the target, we receive the intended command-line 
 I highlighted the filename part in bold; the rest contains the arguments. If none of these files exist, the function fails; otherwise, it uses the first match. As an experiment, you can create a file called `C:\Program.exe` to see if any application on your computer has this bug. Interestingly, Microsoft even made Explorer show a warning if it finds this file on startup.
 
 <figure class="shadow">
-  <img  alt="Explorer's Warning" src="https://habrastorage.org/webt/d8/gi/rc/d8girctaoaa090amxjijk6qfibu.png"/>
+  <img  alt="Explorer's Warning" src="/images/IFEO/06.Explorer-warning.png"/>
+  <figcaption>Explorer's warning message.</figcaption>
 </figure>
 
 As for our tools, in some cases, we might have no choice but to use `ShellExecuteEx`, which does not include any correction logic and forces us to supply both parts individually. Therefore, we should mimic `CreateProcess`'s behavior and try to guess what other programs want to achieve.
@@ -147,7 +152,8 @@ As I said before, User Account Control does not seem to interfere or even notice
 Here is how it goes: a program calls to `ShellExecuteEx` specifying the target filename. Under the hood, this function uses COM/RPC to forward its parameters to the **AppInfo** service that handles elevation requests. This service starts **consent.exe**, which, in turn, validates the digital signature of the target file and displays the famous UAC dialog. After the user approves the elevation, **AppInfo** calls `CreateProcessAsUser`, which internally checks for IFEO and swaps the target filename. So there we have it: UAC is clueless about what is happening!
 
 <figure>
-  <img alt="UAC elevation diagram with IFO" src="https://habrastorage.org/webt/ph/ue/h2/phueh2k8kigdg7wxwm8kvv8z2m0.png"/>
+  <img alt="UAC elevation diagram with IFO" src="/images/IFEO/07.Elevation-detailed.png"/>
+  <figcaption>The detailed view on the elevation process under IFEO.</figcaption>
 </figure>
 
 There is also another peculiar topic I want to discuss in this section. Every process stores an identifier of its parent, and some tools use this field to display processes in a tree-like hierarchy. Surprisingly, when it comes to elevation, the caller of `ShellExecuteEx` still appears as a parent, even though **svchost.exe** does all the work on its behalf. How is it possible? Yet, even better, can we achieve the same? When we set up the interception, we instruct the system to inject our debugger into the hierarchy, essentially gaining control over the subtree. It is perfectly normal unless we deal with a multi-process application that depends on correct parent-child relationships. In this case, we should re-parent the new process the same way **AppInfo** does. Luckily for us, this option is documented: all we need is to use [`PROC_THREAD_ATTRIBUTE_PARENT_PROCESS`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute) and [`STARTUPINFOEX`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw). We can use this trick to improve compatibility: the target program would not even know what happened.

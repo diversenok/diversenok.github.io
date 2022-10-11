@@ -4,7 +4,7 @@ title: "How to Make Any Process Work With Transactional NTFS: My First Step to W
 date: 2020-01-28 13:03:34 +0300
 ---
 <figure class="float-right shadow">
-  <img src="https://habrastorage.org/webt/p0/-s/fi/p0-sfitxnzzpywfqxuc4arx1fps.png" alt="TransactionMaster"/>
+  <img src="/images/TxF/01.TransactionMaster.png" alt="TransactionMaster"/>
 </figure>
 
 One of the modules in the Windows kernel provides support for combining a set of file operations into an entity known as a **transaction**. Just like in databases, these entities are *isolated* and *atomic*. You can make some changes to the file system that won't be visible outside until you *commit* them. Or, as an alternative, you can always *rollback* everything. In any case, you act upon the group of operations as a whole. Precisely what needed to preserve *consistency* while installing software or updating our systems, right? If something goes wrong — the installer or even the whole system crashes — the transaction rolls back automatically.
@@ -28,7 +28,7 @@ To provide this new instrument, Microsoft introduced a set of API functions that
 Let's take a look at the architecture of these new functions. We know, that the official API layer from libraries such as `kernel32.dll` does not invoke the kernel directly, but converts the parameters and forwards the call to `ntdll.dll` instead. Which then, issues a syscall. Surprisingly, <u>there is no sign of any additional *-Transacted* functions on both the **ntdll** and kernel side of the call.</u>
 
 <figure>
-  <img src="https://habrastorage.org/webt/hh/1f/pd/hh1fpdvbzuerpebayexmhpn1xui.png" alt="API layers"/>
+  <img src="/images/TxF/02.API-layers.png" alt="API layers"/>
   <figcaption>A relation between the documented API and the system calls.</figcaption>
 </figure>
 
@@ -69,7 +69,7 @@ By the way, it reminds me of a story I read about a malware that managed to fool
 Take a look at this screenshot below. You can see three programs completely disagreeing on the content of the same folder. They all work inside of three different transactions. That's the power of isolation in ACID semantics.
 
 <figure class="shadow">
-  <img src="https://habrastorage.org/webt/9f/ml/ds/9fmldsooc30vlqq7plchzoxystc.png" alt="Transaction isolation"/>
+  <img src="/images/TxF/03.TxF-isolation.png" alt="Transaction isolation"/>
   <figcaption>Transaction isolation in action.</figcaption>
 </figure>
 
