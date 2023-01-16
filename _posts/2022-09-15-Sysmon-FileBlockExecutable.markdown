@@ -1,7 +1,7 @@
 ﻿---
 layout: post
 title: "Bypassing FileBlockExecutable in Sysmon 14.0: A Lesson In Analyzing Assumptions"
-date: 2022-09-22 09:51:07 +0200
+date: 2022-09-15 12:14:07 +0200
 ---
 
 ## The New Capability
