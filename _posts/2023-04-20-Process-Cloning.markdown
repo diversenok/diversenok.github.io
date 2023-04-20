@@ -4,13 +4,13 @@ title: "The Definitive Guide to Process Cloning on Windows"
 date: 2023-04-20 10:00:00 +0200
 ---
 
-<figure class="shadow">
+This article (that I wrote for [Hunt & Hackett](https://www.huntandhackett.com/blog/the-definitive-guide-to-process-cloning-on-windows)) aims to provide the reader with a **comprehensive guide** to the technical details and the underlying design decisions of process cloning on Windows and how they affect its usability. We will explore why most techniques for code injection via cloning will almost inevitably struggle with evading security products, yet other attack vectors like credential dumping might find their niche. There is a lot to cover, so let's dive right in!
+
+<figure>
   <img alt="Blog cover" src="/images/ProcessCloning/01-intro.jpg"/>
 </figure>
 
 While not everybody knows it, Windows natively offers functionality similar to the famous Unix `fork()` API. The primary OS mechanism that makes it possible is the support for **cloning the address space** of a given process. Despite its existence, this feature feels odd for an operating system that went for a completely different design path with process creation. And, as we know from experience in the cybersecurity industry, unusual often means untested, which serves as a great starting point for discovering new attack vectors that rely on abusing edge cases. That's why we often hear offers from security researchers to weaponize process cloning for offensive purposes, such as stealthy memory dumping [[1]](https://billdemirkapi.me/abusing-windows-implementation-of-fork-for-stealthy-memory-operations/), [[2]](https://splintercod3.blogspot.com/p/the-hidden-side-of-seclogon-part-2.html) and code injection [[3]](https://i.blackhat.com/EU-22/Thursday-Briefings/EU-22-Nissan-DirtyVanity.pdf). These ideas get exposure at the [top hacking conferences](https://www.blackhat.com/eu-22/briefings/schedule/index.html#dirty-vanity-a-new-approach-to-code-injection--edr-bypass-28417), so there seems to be potential.
-
-This article aims to provide the reader with a **comprehensive guide** to the technical details and the underlying design decisions of process cloning on Windows and how they affect its usability. We will explore why most techniques for code injection via cloning will almost inevitably struggle with evading security products, yet other attack vectors like credential dumping might find their niche. There is a lot to cover, so let's dive right in!
 
 > **Disclaimer:** the system functions (alongside their behavior) described below is officially undocumented and subject to potential (though unlikely) change. We assume that the myriad of pitfalls described below already serves as a good reason why, but let's stress it out: please, don't rely on them in production code!
 
@@ -439,6 +439,6 @@ We present a small tool shown in the screenshot above to help identify problemat
 
 **Cloning** is the ultimate form of inheritance, an abstraction that breaks the principle of least privileges by trying to share as much as possible. In some cases, it serves as a pleasant benefit; in others — it is an undesirable attack vector. In any of them, it is a peculiar primitive worth investigating. We hope the behavior we documented in this (rather lengthy) blog post serves as a strong foundation for all further research on the topic. In addition to the previously mentioned examples and tools, we also share a [small library](https://github.com/huntandhackett/process-cloning/tree/master/5.Library) (that works on top of [PHNT headers](https://github.com/processhacker/phnt)) that might offer a convenient starting point for additional experimentation.
 
-<figure class="shadow">
+<figure>
   <img alt="The taxonomy of process cloning functions on Windows" src="/images/ProcessCloning/05-taxonomy.png"/>
 </figure>
