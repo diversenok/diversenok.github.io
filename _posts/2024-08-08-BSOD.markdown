@@ -1,6 +1,6 @@
 ﻿---
 layout: post
-title: "On System Reliability or Why the (Conceptual) Design of the Blue Screen on Windows Is Good."
+title: "On System Reliability or Why the (Conceptual) Design of the Blue Screen on Windows Is Good"
 date: 2024-08-08 10:00:00 +0200
 ---
 
