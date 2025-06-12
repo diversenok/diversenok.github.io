@@ -4,12 +4,14 @@ title: About
 permalink: /about/
 ---
 
-Hi, there! I am an ICT student and a part-time security researcher who likes Windows internals and system programming. I play a lot with [**Native API**](https://github.com/processhacker/phnt) (from the user-mode side), reverse definitions for undocumented Windows mechanisms, invent AV/EDR evasion techniques, and otherwise have fun with security-related topics.
+I am a Security Researcher at [Hunt & Hackett](https://huntandhackett.com/) specializing in Windows internals. I do system programming (C for sharing code; Delphi for personal projects), fluently speak [Native API](https://github.com/processhacker/phnt) (from user mode; there is no need to go into the kernel!), and reverse engineer definitions for interacting with various Windows components. Occasionally, even [document](https://ntdoc.m417z.com/) them.
 
-Twitter: [@diversenok_zero](https://twitter.com/diversenok_zero)  
 GitHub: [diversenok](https://github.com/diversenok)  
+Twitter: [@diversenok_zero](https://twitter.com/diversenok_zero)  
+Bluesky: [@diversenok.bsky.social](https://bsky.app/profile/diversenok.bsky.social)  
 
 You can also often find me on several Discord servers:
  - [Secret.Club](https://discord.gg/dj3qC533JQ)
+ - [System Informer](https://discord.com/invite/k2MQd2DzC2)
  - [The Red Team Lounge](https://discord.gg/qhMBbfg5ez)
  - [Red-Team VX Community](https://discord.gg/Wj9hYKnMkU)
